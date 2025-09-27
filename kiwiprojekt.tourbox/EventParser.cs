@@ -102,6 +102,7 @@
                 >= 47 and <= 50 => AxisScroll(code, action - 47, TourBoxKey.Scroll, ActionType.Increased, TourBoxKey.Top),
                 >= 51 and <= 54 => AxisScroll(code, action - 51, TourBoxKey.Scroll, ActionType.Increased, TourBoxKey.Side),
 
+                55 => Click(code, TourBoxKey.Knob),
                 57 => Click(code, TourBoxKey.C1, TourBoxKey.Short),
                 58 => Click(code, TourBoxKey.C2, TourBoxKey.Short),
 

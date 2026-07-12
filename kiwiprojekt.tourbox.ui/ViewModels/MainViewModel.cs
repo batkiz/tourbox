@@ -197,7 +197,7 @@ public class MainViewModel : BindableBase
             {
                 ControlName = key,
                 Action = entry.Preview,
-                Mode = entry.Mode,
+                Mode = entry.Mode == BindMode.Hold ? "Hold" : "Tap",
                 IsRotary = false
             });
         }
@@ -221,28 +221,4 @@ public class MainViewModel : BindableBase
     {
         _input.Dispose();
     }
-}
-
-/// <summary>
-/// Simple ICommand implementation for ViewModels.
-/// </summary>
-public class RelayCommand : ICommand
-{
-    private readonly Action<object?> _execute;
-    private readonly Predicate<object?>? _canExecute;
-
-    public RelayCommand(Action<object?> execute, Predicate<object?>? canExecute = null)
-    {
-        _execute = execute;
-        _canExecute = canExecute;
-    }
-
-    public event EventHandler? CanExecuteChanged
-    {
-        add => CommandManager.RequerySuggested += value;
-        remove => CommandManager.RequerySuggested -= value;
-    }
-
-    public bool CanExecute(object? parameter) => _canExecute?.Invoke(parameter) ?? true;
-    public void Execute(object? parameter) => _execute(parameter);
 }

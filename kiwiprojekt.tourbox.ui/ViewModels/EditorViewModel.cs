@@ -55,7 +55,12 @@ public class EditorViewModel : BindableBase
 
     // ── KeyCombo proxies (XAML binds to Editor.KeyCombo, not Editor.Entry.KeyCombo) ──
     public string KeyCombo { get => _entry.KeyCombo; set => _entry.KeyCombo = value; }
-    public string Mode { get => _entry.Mode; set => _entry.Mode = value; }
+    // ── Mode binding (ComboBox uses strings) ──
+    public string Mode
+    {
+        get => _entry.Mode == BindMode.Hold ? "Hold" : "Tap";
+        set => _entry.Mode = value == "Hold" ? BindMode.Hold : BindMode.Tap;
+    }
     public string MouseButton { get => _entry.MouseButton; set => _entry.MouseButton = value; }
     public string ScrollDirection { get => _entry.ScrollDirection; set => _entry.ScrollDirection = value; }
     public string Text { get => _entry.Text; set => _entry.Text = value; }

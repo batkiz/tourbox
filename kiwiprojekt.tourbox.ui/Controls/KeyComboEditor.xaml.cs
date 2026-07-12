@@ -14,15 +14,19 @@ public partial class KeyComboEditor : System.Windows.Controls.UserControl
             new FrameworkPropertyMetadata("", FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
                 OnKeyComboChanged));
 
-    public static readonly DependencyProperty MainKeyProperty =
-        DependencyProperty.Register(nameof(MainKey), typeof(string), typeof(KeyComboEditor),
-            new PropertyMetadata(""));
-
     public string KeyCombo
     {
         get => (string)GetValue(KeyComboProperty);
         set => SetValue(KeyComboProperty, value);
     }
+
+    /// <summary>
+    /// The main key portion of the combo, without VK_ prefix.
+    /// DependencyProperty needed for ElementName binding from ComboBox.Text.
+    /// </summary>
+    public static readonly DependencyProperty MainKeyProperty =
+        DependencyProperty.Register(nameof(MainKey), typeof(string), typeof(KeyComboEditor),
+            new PropertyMetadata(""));
 
     public string MainKey
     {
@@ -71,8 +75,7 @@ public partial class KeyComboEditor : System.Windows.Controls.UserControl
 
         foreach (var part in parts)
         {
-            var normalized = part.StartsWith("VK_", StringComparison.OrdinalIgnoreCase)
-                ? part[3..] : part;
+            var normalized = VkHelper.StripPrefix(part);
 
             switch (normalized.ToUpperInvariant())
             {
@@ -114,7 +117,7 @@ public partial class KeyComboEditor : System.Windows.Controls.UserControl
             {
                 var key = k.Trim();
                 if (string.IsNullOrEmpty(key)) continue;
-                parts.Add(key.StartsWith("VK_", StringComparison.OrdinalIgnoreCase) ? key : $"VK_{key}");
+                parts.Add(VkHelper.EnsurePrefix(key));
             }
         }
 

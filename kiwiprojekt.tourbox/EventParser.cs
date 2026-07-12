@@ -27,7 +27,7 @@
             };
         }
 
-        private static TourBoxEvent? AxisScroll(byte code, int key, TourBoxKey scroll, ActionType type, TourBoxKey? modifier = null)
+        private static TourBoxEvent? ScrollDirectionEvent(byte code, int key, TourBoxKey scroll, ActionType type, TourBoxKey? modifier = null)
         {
             var actionFinished = (code >> 7 & 1) == 1;
             if (actionFinished) return null;
@@ -97,10 +97,10 @@
                 36 => Click(code, TourBoxKey.C1, TourBoxKey.Tall),
                 37 => Click(code, TourBoxKey.C2, TourBoxKey.Tall),
 
-                >= 38 and <= 41 => AxisScroll(code, action - 38, TourBoxKey.Scroll, ActionType.Increased),
+                >= 38 and <= 41 => ScrollDirectionEvent(code, action - 38, TourBoxKey.Scroll, ActionType.Increased),
                 >= 43 and <= 46 => Axis(code, action - 43, TourBoxKey.Top),
-                >= 47 and <= 50 => AxisScroll(code, action - 47, TourBoxKey.Scroll, ActionType.Increased, TourBoxKey.Top),
-                >= 51 and <= 54 => AxisScroll(code, action - 51, TourBoxKey.Scroll, ActionType.Increased, TourBoxKey.Side),
+                >= 47 and <= 50 => ScrollDirectionEvent(code, action - 47, TourBoxKey.Scroll, ActionType.Increased, TourBoxKey.Top),
+                >= 51 and <= 54 => ScrollDirectionEvent(code, action - 51, TourBoxKey.Scroll, ActionType.Increased, TourBoxKey.Side),
 
                 55 => Click(code, TourBoxKey.Knob),
                 56 => Click(code, TourBoxKey.Dial),
@@ -117,9 +117,9 @@
 
                 79 => Scroll(code, ActionType.Increased, TourBoxKey.Dial),
 
-                >= 102 and <= 105 => AxisScroll(code, action - 102, TourBoxKey.Scroll, ActionType.Decreased),
-                >= 111 and <= 114 => AxisScroll(code, action - 111, TourBoxKey.Scroll, ActionType.Decreased, TourBoxKey.Top),
-                >= 115 and <= 118 => AxisScroll(code, action - 115, TourBoxKey.Scroll, ActionType.Decreased, TourBoxKey.Side),
+                >= 102 and <= 105 => ScrollDirectionEvent(code, action - 102, TourBoxKey.Scroll, ActionType.Decreased),
+                >= 111 and <= 114 => ScrollDirectionEvent(code, action - 111, TourBoxKey.Scroll, ActionType.Decreased, TourBoxKey.Top),
+                >= 115 and <= 118 => ScrollDirectionEvent(code, action - 115, TourBoxKey.Scroll, ActionType.Decreased, TourBoxKey.Side),
 
                 _ => new TourBoxEvent(code, ActionType.Unknown)
             };

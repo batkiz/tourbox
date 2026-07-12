@@ -188,9 +188,7 @@ public class InputService : IDisposable
 
         foreach (var part in parts)
         {
-            var normalized = part.StartsWith("VK_", StringComparison.OrdinalIgnoreCase)
-                ? part[3..]
-                : part;
+            var normalized = VkHelper.StripPrefix(part);
 
             if (Enum.TryParse<VirtualKeyCode>(normalized, true, out var code))
             {

@@ -33,8 +33,8 @@ public class MappingEntry : BindableBase
     private string _text = "";
     public string Text { get => _text; set { if (SetProperty(ref _text, value)) UpdatePreview(); } }
 
-    private string _mode = "Tap";
-    public string Mode { get => _mode; set => SetProperty(ref _mode, value); }
+    private BindMode _mode = BindMode.Tap;
+    public BindMode Mode { get => _mode; set => SetProperty(ref _mode, value); }
 
     private string _preview = "";
     public string Preview { get => _preview; private set => SetProperty(ref _preview, value); }
@@ -81,7 +81,7 @@ public class MappingEntry : BindableBase
             entry.KeyCombo = action;
         }
 
-        entry.Mode = binding.Mode ?? "Tap";
+        entry.Mode = binding.Mode is "Hold" ? BindMode.Hold : BindMode.Tap;
         return entry;
     }
 
@@ -101,7 +101,7 @@ public class MappingEntry : BindableBase
 
         var value = Kind == ActionKind.MouseScroll ? ScrollDirection : "";
 
-        return new KeyBinding { Action = action, Mode = Mode, Value = value };
+        return new KeyBinding { Action = action, Mode = Mode == BindMode.Hold ? "Hold" : "Tap", Value = value };
     }
 
     private void UpdatePreview()

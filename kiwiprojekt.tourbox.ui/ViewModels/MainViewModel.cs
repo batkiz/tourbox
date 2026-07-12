@@ -11,6 +11,7 @@ namespace kiwiprojekt.tourbox.ui.ViewModels;
 public class MainViewModel : BindableBase
 {
     private readonly TourBoxService _service;
+    private readonly InputService _input;
 
     public DeviceState Device { get; } = new();
 
@@ -67,6 +68,7 @@ public class MainViewModel : BindableBase
     public MainViewModel(TourBoxService service)
     {
         _service = service;
+        _input = new InputService(service);
 
         ConnectCommand = new RelayCommand(async _ => await ConnectAsync(), _ => Device.ConnectionState == ConnectionState.Disconnected);
         DisconnectCommand = new RelayCommand(_ => Disconnect(), _ => Device.ConnectionState == ConnectionState.Connected);
@@ -188,6 +190,8 @@ public class MainViewModel : BindableBase
 
     private void RefreshMappingPreviews()
     {
+        _input.UpdateConfig(_appConfig);
+
         MappingPreviews.Clear();
 
         // Single keys
@@ -206,6 +210,11 @@ public class MainViewModel : BindableBase
         }
 
         OnPropertyChanged(nameof(MappingPreviews));
+    }
+
+    public void Dispose()
+    {
+        _input.Dispose();
     }
 }
 

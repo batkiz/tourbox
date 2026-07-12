@@ -90,6 +90,7 @@ public partial class App : System.Windows.Application
     protected override void OnExit(ExitEventArgs e)
     {
         _portScanTimer?.Dispose();
+        _viewModel?.Dispose();
         _service?.Dispose();
         _trayIcon?.Dispose();
         base.OnExit(e);

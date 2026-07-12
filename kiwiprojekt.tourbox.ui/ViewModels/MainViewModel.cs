@@ -14,8 +14,6 @@ public class MainViewModel : BindableBase
 
     public DeviceState Device { get; } = new();
 
-    public TourBoxVisualState Visual { get; } = new();
-
     /// <summary>
     /// Control name → action preview string for tooltips.
     /// </summary>
@@ -40,27 +38,6 @@ public class MainViewModel : BindableBase
     }
 
     private AppConfig _appConfig = new();
-
-    /// <summary>
-    /// Control name -> human-readable label for dialogs.
-    /// </summary>
-    private static readonly Dictionary<string, string> ControlLabels = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["Tall"] = "Tall (主按键)",
-        ["Short"] = "Short",
-        ["Top"] = "Top",
-        ["Side"] = "Side",
-        ["Up"] = "D-Pad ↑",
-        ["Down"] = "D-Pad ↓",
-        ["Left"] = "D-Pad ←",
-        ["Right"] = "D-Pad →",
-        ["C1"] = "C1",
-        ["C2"] = "C2",
-        ["Tour"] = "Tour",
-        ["Knob"] = "Knob (旋钮)",
-        ["Scroll"] = "Scroll (滚轮)",
-        ["Dial"] = "Dial (拨盘)",
-    };
 
     private static readonly HashSet<string> RotaryControls = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -90,7 +67,6 @@ public class MainViewModel : BindableBase
         _service.ButtonEvent += e =>
         {
             Device.LastEvent = e.ToString() ?? "";
-            Visual.ApplyEvent(e);
             EventLog.Insert(0, e);
             while (EventLog.Count > MaxEventLogEntries)
                 EventLog.RemoveAt(EventLog.Count - 1);

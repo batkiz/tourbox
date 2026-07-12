@@ -153,52 +153,37 @@ public class InputService : IDisposable
 
     private void ExecuteAction(KeyBinding config, bool? isDown)
     {
-        var action = config.Action.Trim();
+        var entry = MappingEntry.FromKeyBinding(config);
 
-        // Special: Mouse Click
-        if (action.Equals("LeftClick", StringComparison.OrdinalIgnoreCase))
+        switch (entry.Kind)
         {
-            if (isDown != false) _input.Mouse.LeftButtonClick();
-            return;
-        }
-        if (action.Equals("RightClick", StringComparison.OrdinalIgnoreCase))
-        {
-            if (isDown != false) _input.Mouse.RightButtonClick();
-            return;
-        }
-        if (action.Equals("MiddleClick", StringComparison.OrdinalIgnoreCase))
-        {
-            if (isDown != false) _input.Mouse.MiddleButtonClick();
-            return;
-        }
+            case ActionKind.MouseClick:
+                if (isDown != false)
+                {
+                    if (entry.MouseButton == "Left") _input.Mouse.LeftButtonClick();
+                    else if (entry.MouseButton == "Right") _input.Mouse.RightButtonClick();
+                    else _input.Mouse.MiddleButtonClick();
+                }
+                return;
 
-        // Special: Mouse Scroll
-        if (action.Equals("VerticalScroll", StringComparison.OrdinalIgnoreCase))
-        {
-            var val = string.Equals(config.Value, "Up", StringComparison.OrdinalIgnoreCase) ? 1 : -1;
-            _input.Mouse.VerticalScroll(val * 2);
-            return;
-        }
-        if (action.Equals("HorizontalScroll", StringComparison.OrdinalIgnoreCase))
-        {
-            var val = string.Equals(config.Value, "Right", StringComparison.OrdinalIgnoreCase) ? 1 : -1;
-            _input.Mouse.HorizontalScroll(val * 2);
-            return;
-        }
-
-        // Special: Text Entry
-        if (action.StartsWith("Text:", StringComparison.OrdinalIgnoreCase))
-        {
-            if (isDown != true)
+            case ActionKind.MouseScroll:
             {
-                var text = action["Text:".Length..];
-                _input.Keyboard.TextEntry(text);
+                int val = entry.ScrollDirection is "Up" or "Right" ? 1 : -1;
+                if (entry.ScrollDirection is "Left" or "Right")
+                    _input.Mouse.HorizontalScroll(val * 2);
+                else
+                    _input.Mouse.VerticalScroll(val * 2);
+                return;
             }
-            return;
+
+            case ActionKind.Text:
+                if (isDown != true)
+                    _input.Keyboard.TextEntry(entry.Text);
+                return;
         }
 
-        // Keyboard: parse key combo (e.g., "VK_CONTROL+VK_C" or "VK_BROWSER_BACK")
-        var parts = action.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        // Keyboard: parse combo
+        var parts = entry.KeyCombo.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var keys = new List<VirtualKeyCode>();
 
         foreach (var part in parts)

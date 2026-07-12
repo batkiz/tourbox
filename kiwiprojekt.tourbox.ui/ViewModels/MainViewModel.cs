@@ -13,6 +13,8 @@ public class MainViewModel : BindableBase
 
     public DeviceState Device { get; } = new();
 
+    public TourBoxVisualState Visual { get; } = new();
+
     public ObservableCollection<TourBoxEvent> EventLog { get; } = new();
 
     private const int MaxEventLogEntries = 200;
@@ -46,6 +48,7 @@ public class MainViewModel : BindableBase
         _service.ButtonEvent += e =>
         {
             Device.LastEvent = e.ToString() ?? "";
+            Visual.ApplyEvent(e);
             EventLog.Insert(0, e);
             while (EventLog.Count > MaxEventLogEntries)
                 EventLog.RemoveAt(EventLog.Count - 1);

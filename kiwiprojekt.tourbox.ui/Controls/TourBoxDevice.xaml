@@ -1,0 +1,246 @@
+<UserControl x:Class="kiwiprojekt.tourbox.ui.Controls.TourBoxDevice"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="420" d:DesignWidth="520">
+
+    <UserControl.Resources>
+        <!-- Highlight colors -->
+        <SolidColorBrush x:Key="BtnNormal" Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="BtnActive" Color="#4CAF50"/>
+        <SolidColorBrush x:Key="BtnText" Color="#333"/>
+        <SolidColorBrush x:Key="KnobNormal" Color="#BDBDBD"/>
+        <SolidColorBrush x:Key="KnobActive" Color="#2196F3"/>
+        <SolidColorBrush x:Key="RotaryArrow" Color="#FF9800"/>
+        <SolidColorBrush x:Key="BgBrush" Color="#FAFAFA"/>
+        <SolidColorBrush x:Key="BorderBrush" Color="#BDBDBD"/>
+
+        <!-- Base button style -->
+        <Style x:Key="TourBoxBtn" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource BtnNormal}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+
+        <!-- Active button trigger -->
+        <Style x:Key="HighlightBtn" TargetType="Border" BasedOn="{StaticResource TourBoxBtn}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Active}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource BtnActive}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Knob style -->
+        <Style x:Key="TourBoxKnob" TargetType="Ellipse">
+            <Setter Property="Fill" Value="{StaticResource KnobNormal}"/>
+            <Setter Property="Stroke" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="StrokeThickness" Value="2"/>
+        </Style>
+    </UserControl.Resources>
+
+    <!-- Device body -->
+    <Border Background="{StaticResource BgBrush}" BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="2" CornerRadius="16" Padding="16">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="140"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="70"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="70"/>
+            </Grid.RowDefinitions>
+
+            <!-- ========== LEFT COLUMN: D-Pad + Rotaries ========== -->
+
+            <!-- D-Pad (Row 0) -->
+            <Border Grid.Row="0" Grid.Column="0" Margin="0,0,12,6">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Up -->
+                    <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource HighlightBtn}"
+                            Tag="Up" ToolTip="D-Pad ↑" Margin="2">
+                        <TextBlock Text="▲" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   FontSize="14" FontWeight="Bold"/>
+                    </Border>
+                    <!-- Left -->
+                    <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource HighlightBtn}"
+                            Tag="Left" ToolTip="D-Pad ←" Margin="2">
+                        <TextBlock Text="◀" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   FontSize="14" FontWeight="Bold"/>
+                    </Border>
+                    <!-- Center -->
+                    <Border Grid.Row="1" Grid.Column="1" Background="#DDD" BorderBrush="#BBB"
+                            BorderThickness="1" CornerRadius="3" Margin="2"
+                            ToolTip="D-Pad">
+                    </Border>
+                    <!-- Right -->
+                    <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource HighlightBtn}"
+                            Tag="Right" ToolTip="D-Pad →" Margin="2">
+                        <TextBlock Text="▶" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   FontSize="14" FontWeight="Bold"/>
+                    </Border>
+                    <!-- Down -->
+                    <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource HighlightBtn}"
+                            Tag="Down" ToolTip="D-Pad ↓" Margin="2">
+                        <TextBlock Text="▼" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   FontSize="14" FontWeight="Bold"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Knob (Row 1 top) -->
+            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,12,0">
+                <TextBlock Text="Knob 旋钮" FontSize="10" Foreground="#888"
+                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                <Border Style="{StaticResource HighlightBtn}" Tag="Knob" Height="56" Width="56"
+                        CornerRadius="28" HorizontalAlignment="Center">
+                    <Grid>
+                        <TextBlock Text="⭮" FontSize="28" HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding KnobDir}" FontSize="14"
+                                   Foreground="{StaticResource RotaryArrow}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                   Margin="0,0,4,2" FontWeight="Bold"/>
+                    </Grid>
+                </Border>
+            </StackPanel>
+
+            <!-- Scroll (Row 1 middle) -->
+            <StackPanel Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,12,0">
+                <TextBlock Text="Scroll 滚轮" FontSize="10" Foreground="#888"
+                           HorizontalAlignment="Center" Margin="0,8,0,4"/>
+                <Border Style="{StaticResource HighlightBtn}" Tag="Scroll" Height="52" Width="52"
+                        CornerRadius="26" HorizontalAlignment="Center">
+                    <Grid>
+                        <TextBlock Text="⟳" FontSize="24" HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ScrollDir}" FontSize="14"
+                                   Foreground="{StaticResource RotaryArrow}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                   Margin="0,0,4,2" FontWeight="Bold"/>
+                    </Grid>
+                </Border>
+            </StackPanel>
+
+            <!-- Dial (Row 2) -->
+            <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,6,12,0">
+                <TextBlock Text="Dial 拨盘" FontSize="10" Foreground="#888"
+                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                <Border Style="{StaticResource HighlightBtn}" Tag="Dial" Height="52" Width="52"
+                        CornerRadius="26" HorizontalAlignment="Center">
+                    <Grid>
+                        <TextBlock Text="◎" FontSize="24" HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding DialDir}" FontSize="14"
+                                   Foreground="{StaticResource RotaryArrow}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                   Margin="0,0,4,2" FontWeight="Bold"/>
+                    </Grid>
+                </Border>
+            </StackPanel>
+
+            <!-- ========== RIGHT COLUMN: Buttons ========== -->
+
+            <Grid Grid.Row="0" Grid.RowSpan="3" Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Top button -->
+                <Border Grid.Row="0" Style="{StaticResource HighlightBtn}"
+                        Tag="Top" Height="36" Margin="0,0,0,4"
+                        ToolTip="Top 按钮">
+                    <TextBlock Text="Top" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               FontWeight="SemiBold" FontSize="12"/>
+                </Border>
+
+                <!-- Tall (main button) + Short -->
+                <Grid Grid.Row="1" Margin="0,4">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{StaticResource HighlightBtn}"
+                            Tag="Tall" ToolTip="Tall 按钮">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Tall" HorizontalAlignment="Center"
+                                       FontWeight="Bold" FontSize="18"
+                                       Foreground="{StaticResource BtnText}"/>
+                            <TextBlock Text="主按键" HorizontalAlignment="Center"
+                                       FontSize="10" Foreground="#888"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" Style="{StaticResource HighlightBtn}"
+                            Tag="Short" Height="36" Margin="0,4,0,0"
+                            ToolTip="Short 按钮">
+                        <TextBlock Text="Short" HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontWeight="SemiBold" FontSize="12"/>
+                    </Border>
+                </Grid>
+
+                <!-- Bottom row: Side + C1/Tour/C2 -->
+                <Grid Grid.Row="2" Margin="0,4,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Side button (wide) -->
+                    <Border Grid.Row="0" Style="{StaticResource HighlightBtn}"
+                            Tag="Side" Height="34"
+                            ToolTip="Side 按钮">
+                        <TextBlock Text="Side" HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontWeight="SemiBold" FontSize="12"/>
+                    </Border>
+
+                    <!-- C1 / Tour / C2 -->
+                    <UniformGrid Grid.Row="1" Columns="3" Margin="0,4,0,0">
+                        <Border Style="{StaticResource HighlightBtn}"
+                                Tag="C1" Margin="0,0,3,0"
+                                ToolTip="C1">
+                            <TextBlock Text="C1" HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       FontWeight="SemiBold" FontSize="12"/>
+                        </Border>
+                        <Border Style="{StaticResource HighlightBtn}"
+                                Tag="Tour" Margin="2,0"
+                                ToolTip="Tour">
+                            <TextBlock Text="Tour" HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       FontWeight="SemiBold" FontSize="10"/>
+                        </Border>
+                        <Border Style="{StaticResource HighlightBtn}"
+                                Tag="C2" Margin="3,0,0,0"
+                                ToolTip="C2">
+                            <TextBlock Text="C2" HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       FontWeight="SemiBold" FontSize="12"/>
+                        </Border>
+                    </UniformGrid>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

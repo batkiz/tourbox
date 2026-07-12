@@ -89,7 +89,9 @@
         <!-- Device Visual + Key Tester -->
         <Border Grid.Row="1" Padding="16" BorderBrush="#E0E0E0" BorderThickness="1"
                 CornerRadius="6" Margin="0,0,0,8">
-            <controls:TourBoxDevice VisualState="{Binding Visual}"/>
+            <controls:TourBoxDevice VisualState="{Binding Visual}"
+                                    Mappings="{Binding MappingPreviews}"
+                                    ControlClicked="Device_ControlClicked"/>
         </Border>
 
         <!-- Event Log -->

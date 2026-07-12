@@ -1,9 +1,11 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using kiwiprojekt.tourbox.ui.Models;
 using UserControl = System.Windows.Controls.UserControl;
+using Cursors = System.Windows.Input.Cursors;
 
 namespace kiwiprojekt.tourbox.ui.Controls;
 
@@ -19,10 +21,25 @@ public partial class TourBoxDevice : UserControl
             typeof(TourBoxDevice),
             new PropertyMetadata(null, OnVisualStateChanged));
 
+    public static readonly DependencyProperty MappingsProperty =
+        DependencyProperty.Register(
+            nameof(Mappings),
+            typeof(Dictionary<string, string>),
+            typeof(TourBoxDevice),
+            new PropertyMetadata(null, OnMappingsChanged));
+
+    public event Action<string>? ControlClicked;
+
     public TourBoxVisualState? VisualState
     {
         get => (TourBoxVisualState?)GetValue(VisualStateProperty);
         set => SetValue(VisualStateProperty, value);
+    }
+
+    public Dictionary<string, string>? Mappings
+    {
+        get => (Dictionary<string, string>?)GetValue(MappingsProperty);
+        set => SetValue(MappingsProperty, value);
     }
 
     private readonly Dictionary<string, Border> _buttonMap = new();
@@ -47,6 +64,23 @@ public partial class TourBoxDevice : UserControl
         }
     }
 
+    private static void OnMappingsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is TourBoxDevice control && e.NewValue is Dictionary<string, string> mappings)
+        {
+            control.UpdateTooltips(mappings);
+        }
+    }
+
+    private void UpdateTooltips(Dictionary<string, string> mappings)
+    {
+        foreach (var (name, border) in _buttonMap)
+        {
+            var desc = mappings.TryGetValue(name, out var m) ? m : "点击编辑映射";
+            border.ToolTip = $"{name} — {desc}";
+        }
+    }
+
     private void OnStatePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (sender is TourBoxVisualState state)
@@ -56,7 +90,8 @@ public partial class TourBoxDevice : UserControl
     public override void OnApplyTemplate()
     {
         base.OnApplyTemplate();
-        // After template is applied, find all tagged borders
+        _buttonMap.Clear();
+        // After template is applied, find all tagged borders and make them clickable
         FindButtons(this);
     }
 
@@ -65,9 +100,12 @@ public partial class TourBoxDevice : UserControl
         for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
         {
             var child = VisualTreeHelper.GetChild(parent, i);
-            if (child is Border border && border.Tag is string tag)
+            if (child is Border border && border.Tag is string tag && !string.IsNullOrEmpty(tag))
             {
                 _buttonMap[tag] = border;
+                border.Cursor = Cursors.Hand;
+                border.MouseLeftButtonDown += (_, _) => ControlClicked?.Invoke(tag);
+                border.ToolTip = $"{tag} — 点击编辑映射";
             }
             FindButtons(child);
         }

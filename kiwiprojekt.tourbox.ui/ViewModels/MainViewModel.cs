@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using kiwiprojekt.tourbox.ui.Models;
 using kiwiprojekt.tourbox.ui.Services;
+using kiwiprojekt.tourbox.ui.Views;
 
 namespace kiwiprojekt.tourbox.ui.ViewModels;
 
@@ -15,6 +16,11 @@ public class MainViewModel : BindableBase
 
     public TourBoxVisualState Visual { get; } = new();
 
+    /// <summary>
+    /// Control name → action preview string for tooltips.
+    /// </summary>
+    public Dictionary<string, string> MappingPreviews { get; } = new(StringComparer.OrdinalIgnoreCase);
+
     public ObservableCollection<TourBoxEvent> EventLog { get; } = new();
 
     private const int MaxEventLogEntries = 200;
@@ -25,6 +31,34 @@ public class MainViewModel : BindableBase
         get => _configPath;
         set => SetProperty(ref _configPath, value);
     }
+
+    private AppConfig _appConfig = new();
+
+    /// <summary>
+    /// Control name -> human-readable label for dialogs.
+    /// </summary>
+    private static readonly Dictionary<string, string> ControlLabels = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Tall"] = "Tall (主按键)",
+        ["Short"] = "Short",
+        ["Top"] = "Top",
+        ["Side"] = "Side",
+        ["Up"] = "D-Pad ↑",
+        ["Down"] = "D-Pad ↓",
+        ["Left"] = "D-Pad ←",
+        ["Right"] = "D-Pad →",
+        ["C1"] = "C1",
+        ["C2"] = "C2",
+        ["Tour"] = "Tour",
+        ["Knob"] = "Knob (旋钮)",
+        ["Scroll"] = "Scroll (滚轮)",
+        ["Dial"] = "Dial (拨盘)",
+    };
+
+    private static readonly HashSet<string> RotaryControls = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Knob", "Scroll", "Dial"
+    };
 
     public ICommand ConnectCommand { get; }
     public ICommand DisconnectCommand { get; }
@@ -55,6 +89,8 @@ public class MainViewModel : BindableBase
         };
 
         ConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+        _appConfig = AppConfig.Load(ConfigPath);
+        RefreshMappingPreviews();
         RefreshPorts();
     }
 
@@ -90,6 +126,86 @@ public class MainViewModel : BindableBase
         {
             Device.PortName = Device.AvailablePorts[0];
         }
+    }
+
+    /// <summary>
+    /// Open the mapping editor for a clicked control.
+    /// </summary>
+    public void EditControlMapping(string controlName)
+    {
+        var label = ControlLabels.GetValueOrDefault(controlName, controlName);
+
+        if (RotaryControls.Contains(controlName))
+        {
+            EditRotaryMapping(controlName, label);
+        }
+        else
+        {
+            EditButtonMapping(controlName, label);
+        }
+    }
+
+    private void EditButtonMapping(string key, string label)
+    {
+        _appConfig.Keys.TryGetValue(key, out var existing);
+        var entry = MappingEntry.FromKeyBinding(existing);
+
+        var dialog = new MappingEditorDialog(label, entry, showMode: true);
+        dialog.Owner = System.Windows.Application.Current.MainWindow;
+
+        if (dialog.ShowDialog() == true)
+        {
+            _appConfig.Keys[key] = dialog.Result.ToKeyBinding();
+            _appConfig.Save(ConfigPath);
+            RefreshMappingPreviews();
+        }
+    }
+
+    private void EditRotaryMapping(string key, string label)
+    {
+        _appConfig.Rotary.TryGetValue(key, out var existing);
+        var cwEntry = MappingEntry.FromKeyBinding(existing?.Clockwise);
+        var ccwEntry = MappingEntry.FromKeyBinding(existing?.CounterClockwise);
+
+        // Edit clockwise first
+        var cwDialog = new MappingEditorDialog($"{label} — 顺时针 ▲", cwEntry, showMode: false);
+        cwDialog.Owner = System.Windows.Application.Current.MainWindow;
+        if (cwDialog.ShowDialog() != true) return;
+
+        // Edit counterclockwise
+        var ccwDialog = new MappingEditorDialog($"{label} — 逆时针 ▼", ccwEntry, showMode: false);
+        ccwDialog.Owner = System.Windows.Application.Current.MainWindow;
+        if (ccwDialog.ShowDialog() != true) return;
+
+        _appConfig.Rotary[key] = new RotaryBinding
+        {
+            Clockwise = cwDialog.Result.ToKeyBinding(),
+            CounterClockwise = ccwDialog.Result.ToKeyBinding()
+        };
+        _appConfig.Save(ConfigPath);
+        RefreshMappingPreviews();
+    }
+
+    private void RefreshMappingPreviews()
+    {
+        MappingPreviews.Clear();
+
+        // Single keys
+        foreach (var (key, binding) in _appConfig.Keys)
+        {
+            var entry = MappingEntry.FromKeyBinding(binding);
+            MappingPreviews[key] = entry.Preview;
+        }
+
+        // Rotary controls
+        foreach (var (key, rotary) in _appConfig.Rotary)
+        {
+            var cw = MappingEntry.FromKeyBinding(rotary.Clockwise);
+            var ccw = MappingEntry.FromKeyBinding(rotary.CounterClockwise);
+            MappingPreviews[key] = $"▲{cw.Preview} ▼{ccw.Preview}";
+        }
+
+        OnPropertyChanged(nameof(MappingPreviews));
     }
 }
 

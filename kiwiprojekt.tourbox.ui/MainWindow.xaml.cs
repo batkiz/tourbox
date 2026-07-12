@@ -41,4 +41,9 @@ public partial class MainWindow : Window
             Hide();
         }
     }
+
+    private void Device_ControlClicked(string controlName)
+    {
+        _viewModel.EditControlMapping(controlName);
+    }
 }

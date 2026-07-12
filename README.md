@@ -14,10 +14,7 @@ kiwiprojekt.tourbox/              # 核心库 — 串口通信 + 协议解析
 ├── ActionType.cs                 #   动作类型枚举
 └── TourBoxEvent.cs               #   事件数据模型
 
-kiwiprojekt.tourbox.consoleapp/   # WinForms 托盘应用 (旧版, 已弃用)
-└── ...
-
-kiwiprojekt.tourbox.ui/           # WPF 配置工具 (当前主力)
+kiwiprojekt.tourbox.ui/           # WPF 配置工具
 ├── Controls/
 │   ├── KeyComboEditor.*          #   可视化按键组合编辑器
 │   └── TourBoxDevice.*           #   设备图示控件
@@ -40,7 +37,7 @@ kiwiprojekt.tourbox.ui/           # WPF 配置工具 (当前主力)
 - **多动作类型** — 键盘组合、鼠标点击、滚轮滚动、文本输入
 - **Tap/Hold 模式** — 点击触发或按住保持
 - **组合键支持** — 两个实体按键组合触发独立动作
-- **配置文件持久化** — 存储在 `%APPDATA%\kiwiprojekt.tourbox\`
+│ 配置文件持久化 — 存储在 `%APPDATA%\kiwiprojekt.tourbox\`
 
 ## 支持的设备
 

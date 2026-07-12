@@ -4,7 +4,6 @@ using System.Windows;
 using System.Windows.Input;
 using kiwiprojekt.tourbox.ui.Models;
 using kiwiprojekt.tourbox.ui.Services;
-using kiwiprojekt.tourbox.ui.Views;
 
 namespace kiwiprojekt.tourbox.ui.ViewModels;
 
@@ -26,6 +25,8 @@ public class MainViewModel : BindableBase
     /// All current mappings as a flat list for display.
     /// </summary>
     public ObservableCollection<MappingRow> MappingRows { get; } = new();
+
+    public EditorViewModel Editor { get; } = new();
 
     public ObservableCollection<TourBoxEvent> EventLog { get; } = new();
 
@@ -136,60 +137,29 @@ public class MainViewModel : BindableBase
     }
 
     /// <summary>
-    /// Open the mapping editor for a clicked control.
+    /// Called when a control is selected (from device click or list click).
     /// </summary>
-    public void EditControlMapping(string controlName)
+    public void SelectControl(string controlName)
     {
-        var label = ControlLabels.GetValueOrDefault(controlName, controlName);
-
         if (RotaryControls.Contains(controlName))
         {
-            EditRotaryMapping(controlName, label);
+            _appConfig.Rotary.TryGetValue(controlName, out var rotary);
+            Editor.LoadRotary(controlName, rotary);
         }
         else
         {
-            EditButtonMapping(controlName, label);
+            _appConfig.Keys.TryGetValue(controlName, out var binding);
+            Editor.LoadButton(controlName, binding);
         }
     }
 
-    private void EditButtonMapping(string key, string label)
+    public void SaveCurrentEditor()
     {
-        _appConfig.Keys.TryGetValue(key, out var existing);
-        var entry = MappingEntry.FromKeyBinding(existing);
+        if (string.IsNullOrEmpty(Editor.ControlName)) return;
 
-        var dialog = new MappingEditorDialog(label, entry, showMode: true);
-        dialog.Owner = System.Windows.Application.Current.MainWindow;
-
-        if (dialog.ShowDialog() == true)
-        {
-            _appConfig.Keys[key] = dialog.Result.ToKeyBinding();
-            _appConfig.Save(ConfigPath);
-            RefreshMappingPreviews();
-        }
-    }
-
-    private void EditRotaryMapping(string key, string label)
-    {
-        _appConfig.Rotary.TryGetValue(key, out var existing);
-        var cwEntry = MappingEntry.FromKeyBinding(existing?.Clockwise);
-        var ccwEntry = MappingEntry.FromKeyBinding(existing?.CounterClockwise);
-
-        // Edit clockwise first
-        var cwDialog = new MappingEditorDialog($"{label} — 顺时针 ▲", cwEntry, showMode: false);
-        cwDialog.Owner = System.Windows.Application.Current.MainWindow;
-        if (cwDialog.ShowDialog() != true) return;
-
-        // Edit counterclockwise
-        var ccwDialog = new MappingEditorDialog($"{label} — 逆时针 ▼", ccwEntry, showMode: false);
-        ccwDialog.Owner = System.Windows.Application.Current.MainWindow;
-        if (ccwDialog.ShowDialog() != true) return;
-
-        _appConfig.Rotary[key] = new RotaryBinding
-        {
-            Clockwise = cwDialog.Result.ToKeyBinding(),
-            CounterClockwise = ccwDialog.Result.ToKeyBinding()
-        };
+        Editor.SaveTo(_appConfig);
         _appConfig.Save(ConfigPath);
+        _input.UpdateConfig(_appConfig);
         RefreshMappingPreviews();
     }
 

@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using kiwiprojekt.tourbox.ui.Converters;
 using kiwiprojekt.tourbox.ui.Models;
 using kiwiprojekt.tourbox.ui.ViewModels;
 
@@ -8,28 +10,27 @@ namespace kiwiprojekt.tourbox.ui;
 
 public partial class MainWindow : Window
 {
-    private readonly MainViewModel _viewModel;
+    private readonly MainViewModel _vm;
 
-    /// <summary>
-    /// When true, the window actually closes instead of hiding.
-    /// Set by App on shutdown.
-    /// </summary>
     public bool ForcesClose { get; set; }
 
     public MainWindow(MainViewModel viewModel)
     {
         InitializeComponent();
-        _viewModel = viewModel;
+
+        // Register converter
+        Resources["BoolToVis"] = new BoolToVisibilityConverter();
+
+        _vm = viewModel;
         DataContext = viewModel;
 
-        // Toggle connect/disconnect button visibility
         UpdateButtonVisibility();
-        _viewModel.Device.PropertyChanged += (_, _) => UpdateButtonVisibility();
+        _vm.Device.PropertyChanged += (_, _) => UpdateButtonVisibility();
     }
 
     private void UpdateButtonVisibility()
     {
-        var connected = _viewModel.Device.ConnectionState == Models.ConnectionState.Connected;
+        var connected = _vm.Device.ConnectionState == Models.ConnectionState.Connected;
         BtnConnect.Visibility = connected ? Visibility.Collapsed : Visibility.Visible;
         BtnDisconnect.Visibility = connected ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -38,7 +39,6 @@ public partial class MainWindow : Window
     {
         if (!ForcesClose)
         {
-            // Hide instead of close — tray app
             e.Cancel = true;
             Hide();
         }
@@ -46,14 +46,19 @@ public partial class MainWindow : Window
 
     private void Device_ControlClicked(string controlName)
     {
-        _viewModel.EditControlMapping(controlName);
+        _vm.SelectControl(controlName);
     }
 
-    private void MappingList_DoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    private void MappingList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (sender is System.Windows.Controls.ListView listView && listView.SelectedItem is MappingRow row)
+        if (MappingList.SelectedItem is MappingRow row)
         {
-            _viewModel.EditControlMapping(row.ControlName);
+            _vm.SelectControl(row.ControlName);
         }
+    }
+
+    private void EditorSave_Click(object sender, RoutedEventArgs e)
+    {
+        _vm.SaveCurrentEditor();
     }
 }

@@ -18,9 +18,6 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        // Register converter
-        Resources["BoolToVis"] = new BoolToVisibilityConverter();
-
         _vm = viewModel;
         DataContext = viewModel;
 

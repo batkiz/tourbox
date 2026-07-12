@@ -2,12 +2,14 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:kiwiprojekt.tourbox.ui.Controls"
+        xmlns:converters="clr-namespace:kiwiprojekt.tourbox.ui.Converters"
         Title="TourBox 配置" Height="700" Width="1050"
         MinHeight="500" MinWidth="900"
         WindowStartupLocation="CenterScreen"
         Closing="Window_Closing">
 
     <Window.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVis"/>
         <SolidColorBrush x:Key="Green" Color="#4CAF50"/>
         <SolidColorBrush x:Key="Red" Color="#F44336"/>
         <SolidColorBrush x:Key="Orange" Color="#FF9800"/>

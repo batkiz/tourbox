@@ -96,10 +96,38 @@ public class MainViewModel : BindableBase
                 EventLog.RemoveAt(EventLog.Count - 1);
         };
 
-        ConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+        ConfigPath = GetDefaultConfigPath();
         _appConfig = AppConfig.Load(ConfigPath);
         RefreshMappingPreviews();
         RefreshPorts();
+    }
+
+    private static string GetDefaultConfigPath()
+    {
+        var dir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "kiwiprojekt.tourbox");
+
+        Directory.CreateDirectory(dir);
+
+        var path = Path.Combine(dir, "appsettings.json");
+
+        // Migrate from old location (next to exe) if it exists and new doesn't
+        var oldPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+        if (!File.Exists(path) && File.Exists(oldPath))
+        {
+            File.Copy(oldPath, path);
+        }
+
+        // If neither exists, copy the default template from the app directory
+        if (!File.Exists(path))
+        {
+            var template = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+            if (File.Exists(template))
+                File.Copy(template, path);
+        }
+
+        return path;
     }
 
     private async Task ConnectAsync()

@@ -23,7 +23,7 @@
                 1 => Click(code, TourBoxKey.Down, modifier),
                 2 => Click(code, TourBoxKey.Left, modifier),
                 3 => Click(code, TourBoxKey.Right, modifier),
-                _ => throw new NotSupportedException(),
+                _ => new TourBoxEvent(code, ActionType.Unknown),
             };
         }
 
@@ -38,7 +38,7 @@
                 1 => new TourBoxEvent(code, type, scroll, TourBoxKey.Down, modifier),
                 2 => new TourBoxEvent(code, type, scroll, TourBoxKey.Left, modifier),
                 3 => new TourBoxEvent(code, type, scroll, TourBoxKey.Right, modifier),
-                _ => throw new NotSupportedException(),
+                _ => new TourBoxEvent(code, ActionType.Unknown),
             };
         }
 
@@ -55,7 +55,7 @@
                 2 => new TourBoxEvent(code, type, key, TourBoxKey.Short),
                 3 => new TourBoxEvent(code, type, key, TourBoxKey.Top),
                 4 => new TourBoxEvent(code, type, key, TourBoxKey.Side),
-                _ => throw new NotSupportedException(),
+                _ => new TourBoxEvent(code, ActionType.Unknown),
             };
         }
 
@@ -77,7 +77,7 @@
                 10 => Click(code, TourBoxKey.Scroll),
                 >= 11 and <= 14 => Scroll(code, ActionType.Decreased, TourBoxKey.Scroll, action - 11),
 
-                15 => Scroll(code, ActionType.Increased, TourBoxKey.Dial),
+                15 => Scroll(code, ActionType.Decreased, TourBoxKey.Dial),
 
                 >= 16 and <= 19 => Axis(code, action - 16),
                 >= 20 and <= 23 => Axis(code, action - 20, TourBoxKey.Side),
@@ -103,6 +103,7 @@
                 >= 51 and <= 54 => AxisScroll(code, action - 51, TourBoxKey.Scroll, ActionType.Increased, TourBoxKey.Side),
 
                 55 => Click(code, TourBoxKey.Knob),
+                56 => Click(code, TourBoxKey.Dial),
                 57 => Click(code, TourBoxKey.C1, TourBoxKey.Short),
                 58 => Click(code, TourBoxKey.C2, TourBoxKey.Short),
 
@@ -114,11 +115,11 @@
                 73 => Scroll(code, ActionType.Increased, TourBoxKey.Scroll),
                 >= 75 and <= 78 => Scroll(code, ActionType.Increased, TourBoxKey.Scroll, action - 75),
 
-                79 => Scroll(code, ActionType.Decreased, TourBoxKey.Dial),
+                79 => Scroll(code, ActionType.Increased, TourBoxKey.Dial),
 
                 >= 102 and <= 105 => AxisScroll(code, action - 102, TourBoxKey.Scroll, ActionType.Decreased),
                 >= 111 and <= 114 => AxisScroll(code, action - 111, TourBoxKey.Scroll, ActionType.Decreased, TourBoxKey.Top),
-                >= 115 and <= 119 => AxisScroll(code, action - 115, TourBoxKey.Scroll, ActionType.Decreased, TourBoxKey.Side),
+                >= 115 and <= 118 => AxisScroll(code, action - 115, TourBoxKey.Scroll, ActionType.Decreased, TourBoxKey.Side),
 
                 _ => new TourBoxEvent(code, ActionType.Unknown)
             };

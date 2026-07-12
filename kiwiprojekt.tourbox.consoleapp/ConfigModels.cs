@@ -2,10 +2,12 @@ namespace kiwiprojekt.tourbox.consoleapp
 {
     public class TourBoxConfig
     {
+        public string PortName { get; set; } = "";
         public bool DebugMode { get; set; } = false;
-        public Dictionary<string, KeyConfig> Keys { get; set; } = new();
-        public Dictionary<string, KeyConfig> Combos { get; set; } = new();
-        public Dictionary<string, RotaryConfig> Rotary { get; set; } = new();
+        public bool RequiresInit { get; set; } = true;
+        public Dictionary<string, KeyConfig> Keys { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, KeyConfig> Combos { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, RotaryConfig> Rotary { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     }
 
     public class KeyConfig

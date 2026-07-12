@@ -4,7 +4,10 @@
     {
         internal TourBoxEvent(byte code, ActionType action, params TourBoxKey?[] keys)
         {
-            Keys = keys.Where(k => k.HasValue).Select(k => k.Value).ToArray();
+            Keys = keys
+                .Where(static key => key.HasValue)
+                .Select(static key => key.GetValueOrDefault())
+                .ToArray();
             Action = action;
             Code = code;
         }

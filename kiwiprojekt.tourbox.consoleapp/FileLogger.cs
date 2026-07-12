@@ -16,7 +16,7 @@ namespace kiwiprojekt.tourbox.consoleapp
             }
             catch
             {
-                // Ignite write errors to avoid crashing app
+                // Ignore write errors to avoid crashing app.
             }
         }
     }

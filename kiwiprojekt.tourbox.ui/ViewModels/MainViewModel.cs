@@ -22,6 +22,11 @@ public class MainViewModel : BindableBase
     /// </summary>
     public Dictionary<string, string> MappingPreviews { get; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// All current mappings as a flat list for display.
+    /// </summary>
+    public ObservableCollection<MappingRow> MappingRows { get; } = new();
+
     public ObservableCollection<TourBoxEvent> EventLog { get; } = new();
 
     private const int MaxEventLogEntries = 200;
@@ -207,6 +212,32 @@ public class MainViewModel : BindableBase
             var cw = MappingEntry.FromKeyBinding(rotary.Clockwise);
             var ccw = MappingEntry.FromKeyBinding(rotary.CounterClockwise);
             MappingPreviews[key] = $"▲{cw.Preview} ▼{ccw.Preview}";
+        }
+
+        // Populate mapping rows for the list
+        MappingRows.Clear();
+        foreach (var (key, binding) in _appConfig.Keys.OrderBy(k => k.Key))
+        {
+            var entry = MappingEntry.FromKeyBinding(binding);
+            MappingRows.Add(new MappingRow
+            {
+                ControlName = key,
+                Action = entry.Preview,
+                Mode = entry.Mode,
+                IsRotary = false
+            });
+        }
+        foreach (var (key, rotary) in _appConfig.Rotary.OrderBy(k => k.Key))
+        {
+            var cw = MappingEntry.FromKeyBinding(rotary.Clockwise);
+            var ccw = MappingEntry.FromKeyBinding(rotary.CounterClockwise);
+            MappingRows.Add(new MappingRow
+            {
+                ControlName = key,
+                Action = $"▲ {cw.Preview}  ▼ {ccw.Preview}",
+                Mode = "Rotary",
+                IsRotary = true
+            });
         }
 
         OnPropertyChanged(nameof(MappingPreviews));

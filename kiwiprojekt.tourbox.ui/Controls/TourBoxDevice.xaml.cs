@@ -1,32 +1,28 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 using kiwiprojekt.tourbox.ui.Models;
-using UserControl = System.Windows.Controls.UserControl;
+using Color = System.Windows.Media.Color;
 using Cursors = System.Windows.Input.Cursors;
+using Panel = System.Windows.Controls.Panel;
+using Ellipse = System.Windows.Shapes.Ellipse;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace kiwiprojekt.tourbox.ui.Controls;
 
-/// <summary>
-/// Visual representation of the TourBox device with real-time key highlighting.
-/// </summary>
-public partial class TourBoxDevice : UserControl
+public partial class TourBoxDevice : System.Windows.Controls.UserControl
 {
     public static readonly DependencyProperty VisualStateProperty =
-        DependencyProperty.Register(
-            nameof(VisualState),
-            typeof(TourBoxVisualState),
-            typeof(TourBoxDevice),
-            new PropertyMetadata(null, OnVisualStateChanged));
+        DependencyProperty.Register(nameof(VisualState), typeof(TourBoxVisualState),
+            typeof(TourBoxDevice), new PropertyMetadata(null, OnVisualStateChanged));
 
     public static readonly DependencyProperty MappingsProperty =
-        DependencyProperty.Register(
-            nameof(Mappings),
-            typeof(Dictionary<string, string>),
-            typeof(TourBoxDevice),
-            new PropertyMetadata(null, OnMappingsChanged));
+        DependencyProperty.Register(nameof(Mappings), typeof(Dictionary<string, string>),
+            typeof(TourBoxDevice), new PropertyMetadata(null, OnMappingsChanged));
 
     public event Action<string>? ControlClicked;
 
@@ -42,132 +38,228 @@ public partial class TourBoxDevice : UserControl
         set => SetValue(MappingsProperty, value);
     }
 
-    private readonly Dictionary<string, Border> _buttonMap = new();
-    private readonly Dictionary<string, DispatcherTimer> _flashTimers = new();
-    private readonly SolidColorBrush _normalBrush = new(System.Windows.Media.Color.FromRgb(0xE0, 0xE0, 0xE0));
-    private readonly SolidColorBrush _activeBrush = new(System.Windows.Media.Color.FromRgb(0x4C, 0xAF, 0x50));
-    private readonly SolidColorBrush _rotaryBrush = new(System.Windows.Media.Color.FromRgb(0x21, 0x96, 0xF3));
+    // Map control name -> (FrameworkElement, default background)
+    private readonly Dictionary<string, FrameworkElement> _controls = new();
+    private readonly SolidColorBrush _btnOff = new(Color.FromRgb(0x3A, 0x3A, 0x3A));
+    private readonly SolidColorBrush _btnActive = new(Color.FromRgb(0x4C, 0xAF, 0x50));
+    private readonly SolidColorBrush _knobOff = new(Color.FromRgb(0x4A, 0x4A, 0x4A));
+    private readonly SolidColorBrush _knobActive = new(Color.FromRgb(0x21, 0x96, 0xF3));
+    private readonly SolidColorBrush _btnHover = new(Color.FromRgb(0x55, 0x55, 0x55));
+
+    // Label overlays
+    private readonly Dictionary<string, TextBlock> _labels = new();
+
+    private static readonly Dictionary<string, string> ControlLabels = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Tall"] = "Tall", ["Short"] = "Short", ["Top"] = "Top", ["Side"] = "Side",
+        ["Up"] = "▲", ["Down"] = "▼", ["Left"] = "◀", ["Right"] = "▶",
+        ["C1"] = "C1", ["C2"] = "C2", ["Tour"] = "Tour",
+        ["Knob"] = "⭮", ["Scroll"] = "⟳", ["Dial"] = "◎",
+    };
 
     public TourBoxDevice()
     {
         InitializeComponent();
+        Loaded += OnLoaded;
     }
 
-    private static void OnVisualStateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        if (d is TourBoxDevice control && e.NewValue is TourBoxVisualState state)
-        {
-            control.ApplyVisualState(state);
-            if (e.OldValue is TourBoxVisualState oldState)
-                oldState.PropertyChanged -= control.OnStatePropertyChanged;
-            state.PropertyChanged += control.OnStatePropertyChanged;
-        }
+        _controls.Clear();
+        FindControls(this);
+        AddLabelOverlays();
     }
 
-    private static void OnMappingsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is TourBoxDevice control && e.NewValue is Dictionary<string, string> mappings)
-        {
-            control.UpdateTooltips(mappings);
-        }
-    }
-
-    private void UpdateTooltips(Dictionary<string, string> mappings)
-    {
-        foreach (var (name, border) in _buttonMap)
-        {
-            var desc = mappings.TryGetValue(name, out var m) ? m : "点击编辑映射";
-            border.ToolTip = $"{name} — {desc}";
-        }
-    }
-
-    private void OnStatePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (sender is TourBoxVisualState state)
-            ApplyVisualState(state);
-    }
-
-    public override void OnApplyTemplate()
-    {
-        base.OnApplyTemplate();
-        _buttonMap.Clear();
-        // After template is applied, find all tagged borders and make them clickable
-        FindButtons(this);
-    }
-
-    private void FindButtons(DependencyObject parent)
+    private void FindControls(DependencyObject parent)
     {
         for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
         {
             var child = VisualTreeHelper.GetChild(parent, i);
-            if (child is Border border && border.Tag is string tag && !string.IsNullOrEmpty(tag))
+            string? tag = null;
+
+            if (child is Border border && border.Tag is string borderTag)
+                tag = borderTag;
+            else if (child is Ellipse ellipse && ellipse.Tag is string ellipseTag)
+                tag = ellipseTag;
+
+            if (tag != null && child is FrameworkElement fe)
             {
-                _buttonMap[tag] = border;
-                border.Cursor = Cursors.Hand;
-                border.MouseLeftButtonDown += (_, _) => ControlClicked?.Invoke(tag);
-                border.ToolTip = $"{tag} — 点击编辑映射";
+                _controls[tag] = fe;
+                fe.Cursor = Cursors.Hand;
+                fe.MouseLeftButtonDown += (_, _) => ControlClicked?.Invoke(tag);
+                fe.MouseEnter += (_, _) => OnControlHover(tag, true);
+                fe.MouseLeave += (_, _) => OnControlHover(tag, false);
             }
-            FindButtons(child);
+
+            FindControls(child);
         }
     }
 
-    private void ApplyVisualState(TourBoxVisualState state)
+    private void AddLabelOverlays()
+    {
+        foreach (var (name, element) in _controls)
+        {
+            if (!ControlLabels.TryGetValue(name, out var label)) continue;
+
+            var parent = VisualTreeHelper.GetParent(element) as Panel;
+            if (parent == null) continue;
+
+            var tb = new TextBlock
+            {
+                Text = label,
+                FontSize = name switch
+                {
+                    "Knob" or "Scroll" or "Dial" => 26,
+                    "Tall" => 22,
+                    "Up" or "Down" or "Left" or "Right" => 14,
+                    _ => 12
+                },
+                FontWeight = name is "Tall" ? FontWeights.Bold : FontWeights.SemiBold,
+                Foreground = new SolidColorBrush(Color.FromRgb(0xDD, 0xDD, 0xDD)),
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                VerticalAlignment = System.Windows.VerticalAlignment.Center,
+                IsHitTestVisible = false
+            };
+
+            // Place label on top of the control
+            if (element is Border)
+            {
+                // Use Adorner-like approach: add to the same parent grid cell
+                var grid = FindParent<Grid>(element);
+                if (grid != null)
+                {
+                    // Set same row/column
+                    var row = Grid.GetRow(element);
+                    var col = Grid.GetColumn(element);
+                    var rowSpan = Grid.GetRowSpan(element);
+                    var colSpan = Grid.GetColumnSpan(element);
+                    Grid.SetRow(tb, row);
+                    Grid.SetColumn(tb, col);
+                    Grid.SetRowSpan(tb, rowSpan);
+                    Grid.SetColumnSpan(tb, colSpan);
+                    grid.Children.Add(tb);
+                    _labels[name] = tb;
+                    continue;
+                }
+            }
+
+            // For non-Grid layouts, add to parent
+            parent.Children.Add(tb);
+            _labels[name] = tb;
+        }
+    }
+
+    private static T? FindParent<T>(DependencyObject child) where T : DependencyObject
+    {
+        var parent = VisualTreeHelper.GetParent(child);
+        while (parent != null)
+        {
+            if (parent is T t) return t;
+            parent = VisualTreeHelper.GetParent(parent);
+        }
+        return null;
+    }
+
+    private void OnControlHover(string name, bool hover)
+    {
+        if (_controls.TryGetValue(name, out var element))
+        {
+            if (hover && element is Border b && b.Background == _btnOff)
+            {
+                b.Background = _btnHover;
+            }
+            else if (!hover && element is Border b2 && b2.Background == _btnHover)
+            {
+                b2.Background = _btnOff;
+            }
+        }
+    }
+
+    private static void OnVisualStateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is TourBoxDevice c && e.NewValue is TourBoxVisualState s)
+        {
+            c.ApplyHighlights(s);
+            if (e.OldValue is TourBoxVisualState old)
+                old.PropertyChanged -= c.OnStateChanged;
+            s.PropertyChanged += c.OnStateChanged;
+        }
+    }
+
+    private void OnStateChanged(object? s, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (s is TourBoxVisualState state) ApplyHighlights(state);
+    }
+
+    private static void OnMappingsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is TourBoxDevice c && e.NewValue is Dictionary<string, string> m)
+            c.UpdateTooltips(m);
+    }
+
+    private readonly Dictionary<string, DispatcherTimer> _flashTimers = new();
+
+    private void ApplyHighlights(TourBoxVisualState s)
     {
         Dispatcher.BeginInvoke(() =>
         {
-            UpdateButton("Tall", state.Tall);
-            UpdateButton("Side", state.Side);
-            UpdateButton("Top", state.Top);
-            UpdateButton("Short", state.Short);
-            UpdateButton("Up", state.Up);
-            UpdateButton("Down", state.Down);
-            UpdateButton("Left", state.Left);
-            UpdateButton("Right", state.Right);
-            UpdateButton("C1", state.C1);
-            UpdateButton("C2", state.C2);
-            UpdateButton("Tour", state.Tour);
+            HighlightButton("Tall", s.Tall);
+            HighlightButton("Short", s.Short);
+            HighlightButton("Top", s.Top);
+            HighlightButton("Side", s.Side);
+            HighlightButton("Up", s.Up);
+            HighlightButton("Down", s.Down);
+            HighlightButton("Left", s.Left);
+            HighlightButton("Right", s.Right);
+            HighlightButton("C1", s.C1);
+            HighlightButton("C2", s.C2);
+            HighlightButton("Tour", s.Tour);
 
-            // Rotaries: flash on direction change
-            FlashRotary("Knob", state.Knob || !string.IsNullOrEmpty(state.KnobDir));
-            FlashRotary("Scroll", state.Scroll || !string.IsNullOrEmpty(state.ScrollDir));
-            FlashRotary("Dial", state.Dial || !string.IsNullOrEmpty(state.DialDir));
+            FlashKnob("Knob", s.Knob || s.KnobDir != "");
+            FlashKnob("Scroll", s.Scroll || s.ScrollDir != "");
+            FlashKnob("Dial", s.Dial || s.DialDir != "");
         });
     }
 
-    private void UpdateButton(string name, bool active)
+    private void HighlightButton(string name, bool active)
     {
-        if (_buttonMap.TryGetValue(name, out var border))
-        {
-            border.Background = active ? _activeBrush : _normalBrush;
-        }
+        if (_controls.TryGetValue(name, out var element) && element is Border border)
+            border.Background = active ? _btnActive : _btnOff;
     }
 
-    private void FlashRotary(string name, bool active)
+    private void FlashKnob(string name, bool active)
     {
-        if (!_buttonMap.TryGetValue(name, out var border))
-            return;
+        if (!_controls.TryGetValue(name, out var element)) return;
 
-        if (_flashTimers.TryGetValue(name, out var existingTimer))
+        if (_flashTimers.TryGetValue(name, out var t))
+        { t.Stop(); _flashTimers.Remove(name); }
+
+        if (element is Ellipse ellipse)
+            ellipse.Fill = active ? _knobActive : _knobOff;
+        else if (element is Border border)
+            border.Background = active ? _knobActive : _knobOff;
+
+        if (active)
         {
-            existingTimer.Stop();
-            existingTimer.Tick -= (_, _) => { };
-        }
-
-        border.Background = active ? _rotaryBrush : _normalBrush;
-
-        if (active && !string.IsNullOrEmpty(VisualState?.GetType()
-                .GetProperty(name + "Dir")?.GetValue(VisualState)?.ToString()))
-        {
-            // Flash back to normal after 300ms for rotary turns
             var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
             timer.Tick += (_, _) =>
             {
-                border.Background = _normalBrush;
+                if (element is Ellipse e) e.Fill = _knobOff;
+                else if (element is Border b) b.Background = _knobOff;
                 timer.Stop();
                 _flashTimers.Remove(name);
             };
             _flashTimers[name] = timer;
             timer.Start();
+        }
+    }
+
+    private void UpdateTooltips(Dictionary<string, string> mappings)
+    {
+        foreach (var (name, element) in _controls)
+        {
+            var desc = mappings.TryGetValue(name, out var m) ? m : "点击编辑映射";
+            element.ToolTip = $"{name} — {desc}";
         }
     }
 }

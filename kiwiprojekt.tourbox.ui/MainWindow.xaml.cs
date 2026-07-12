@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
+using kiwiprojekt.tourbox.ui.Models;
 using kiwiprojekt.tourbox.ui.ViewModels;
 
 namespace kiwiprojekt.tourbox.ui;
@@ -45,5 +47,13 @@ public partial class MainWindow : Window
     private void Device_ControlClicked(string controlName)
     {
         _viewModel.EditControlMapping(controlName);
+    }
+
+    private void MappingList_DoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is System.Windows.Controls.ListView listView && listView.SelectedItem is MappingRow row)
+        {
+            _viewModel.EditControlMapping(row.ControlName);
+        }
     }
 }
